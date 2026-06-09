@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profesional {
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  nombre              String
+  slug                String?    @unique
+  especialidad        String
+  matricula           String?
+  direccionConsultorio String?   // Dirección del consultorio
+  password            String
+  activo              Boolean    @default(true)
+  mpAccessToken       String?    // Mercado Pago access token for individual professional
+  mpUserId            String?    // Mercado Pago user id for individual professional
+  horarioInicio       String     @default("08:00")
+  horarioFin          String     @default("18:00")
+  diasAtencion        String[]   @default(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"])
+  suscripcionActiva   Boolean    @default(false)
+  planSuscripcion     String?    // 'mensual' o 'anual'
+  fechaVencimiento    DateTime?  // Fecha de vencimiento de la suscripción
+  servicios           Servicio[]
+  pacientes           Paciente[]
+  turnos              Turno[]
+  creadoEn            DateTime   @default(now())
+  fotoPerfil          String?
+  horarioInicio2      String?
+  horarioFin2         String?
+  nombreSesion        String     @default("Consulta")
+  duracionSesion      Int        @default(30)
+  precioConsulta      Float      @default(0)
+  
+  // NextAuth relations
+  user                User?
+}
+
+// NextAuth.js required models
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  profesionalId String    @unique
+  profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Servicio {
+  id            String      @id @default(uuid())
+  nombre        String
+  precio        Float
+  duracionMin   Int         @default(45)
+  profesionalId String
+  profesional   Profesional @relation(fields: [profesionalId], references: [id])
+  turnos        Turno[]
+}
+
+model Tutor {
+  id        String     @id @default(uuid())
+  nombre    String
+  email     String
+  whatsapp  String
+  pacientes Paciente[]
+}
+
+model Paciente {
+  id            String      @id @default(uuid())
+  nombre        String
+  fechaNac      DateTime?
+  tutorId       String
+  tutor         Tutor       @relation(fields: [tutorId], references: [id])
+  profesionalId String
+  profesional   Profesional @relation(fields: [profesionalId], references: [id])
+  turnos        Turno[]
+}
+
+model Turno {
+  id            String      @id @default(uuid())
+  fechaHora     DateTime
+  estado        EstadoTurno @default(PENDIENTE_PAGO)
+  pagoId        String?     @unique 
+  tokenReserva  String      @unique @default(uuid())
+  pacienteId    String
+  paciente      Paciente    @relation(fields: [pacienteId], references: [id])
+  servicioId    String
+  servicio      Servicio    @relation(fields: [servicioId], references: [id])
+  profesionalId String
+  profesional   Profesional @relation(fields: [profesionalId], references: [id])
+}
+
+enum EstadoTurno {
+  PENDIENTE_PAGO
+  CONFIRMADO
+  CANCELADO
+  REALIZADO
+}

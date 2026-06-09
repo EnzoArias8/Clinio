@@ -151,8 +151,8 @@ export default function ReservarPage() {
             style={{ ringColor: "var(--accent)" } as React.CSSProperties}
           >
             <Image
-              src="/dra-maria-lopez.jpg"
-              alt="Dra. María López"
+              src="/professional-placeholder.jpg"
+              alt="Profesional"
               fill
               className="object-cover"
               sizes="96px"
@@ -169,7 +169,7 @@ export default function ReservarPage() {
               className="font-heading text-2xl font-bold md:text-3xl"
               style={{ color: "var(--foreground)" }}
             >
-              Dra. María López
+              Profesional de la Clínica
             </h1>
             <p className="text-sm md:text-base" style={{ color: "var(--muted-foreground)" }}>
               Psicopedagoga · Mat. Nac. 28.451
@@ -1027,7 +1027,7 @@ function ConfirmationScreen({
             <SummaryRow
               icon={<User size={14} />}
               label="Profesional"
-              value="Dra. María López"
+              value="Profesional de la Clínica"
             />
           </div>
           <Button
